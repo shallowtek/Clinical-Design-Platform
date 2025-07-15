@@ -1,0 +1,70 @@
+﻿@page "/protocols"
+@using MCDP.Web.Models.M11
+@using Microsoft.EntityFrameworkCore
+@inject ClinicalDbContext Db
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="flex-1 bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Protocols</h2>
+            <button @onclick='() => Nav.NavigateTo("/protocols/title")' class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow">
+                + New Protocol
+            </button>
+        </div>
+
+        @if (titlePages == null)
+        {
+            <p class="text-gray-600 italic">Loading protocols...</p>
+        }
+        else if (!titlePages.Any())
+        {
+            <p class="text-gray-600 italic">No protocols found. Create one to get started.</p>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class=\"w-full divide-y divide-gray-200\">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Protocol ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Full Title</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Created On</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var title in titlePages)
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class=\"px-4 py-2 text-sm text-gray-700 break-words\">@title.ProtocolIdentifier</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">@title.FullTitle</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">@title.CreatedDate.ToString("dd MMM yyyy")</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-center text-sm font-medium">
+                                    <button @onclick="() => ViewProtocol(title.Id)" class="text-indigo-600 hover:text-indigo-900">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TitlePage> titlePages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        titlePages = await Db.TitlePages.OrderByDescending(s => s.CreatedDate).ToListAsync();
+    }
+
+    private void ViewProtocol(int id)
+    {
+        Nav.NavigateTo($"/protocols/{id}");
+    }
+}

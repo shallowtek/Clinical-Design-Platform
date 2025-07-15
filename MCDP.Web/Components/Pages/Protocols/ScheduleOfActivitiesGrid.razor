@@ -1,0 +1,113 @@
+﻿@using System.Text.Json
+@using Microsoft.AspNetCore.Components
+
+<div class="overflow-x-auto mb-4">
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-50">
+                <th class="px-4 py-2 text-left font-medium text-gray-700">Visit Name</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-700">Day</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-700">Activity</th>
+                <th class="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            @if (_activities.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="px-4 py-2 text-center text-gray-500">
+                        No activities added.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var activity in _activities)
+                {
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-4 py-2">
+                            <InputText @bind-Value="activity.VisitName"
+                                       @onblur="UpdateJson"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500" />
+                        </td>
+                        <td class="px-4 py-2">
+                            <InputNumber @bind-Value="activity.Day"
+                                         @onblur="UpdateJson"
+                                         class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500" />
+                        </td>
+                        <td class="px-4 py-2">
+                            <InputText @bind-Value="activity.Activity"
+                                       @onblur="UpdateJson"
+                                       class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-indigo-500" />
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <button type="button" @onclick="() => RemoveRow(activity)"
+                                    class="text-red-600 hover:text-red-800">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="text-right">
+    <button type="button" @onclick="AddRow"
+            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
+        Add Activity
+    </button>
+</div>
+
+@code {
+    [Parameter] public string Json { get; set; }
+    [Parameter] public EventCallback<string> JsonChanged { get; set; }
+
+    private List<ActivityRow> _activities = new();
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Json))
+        {
+            try
+            {
+                _activities = JsonSerializer.Deserialize<List<ActivityRow>>(Json)
+                              ?? new List<ActivityRow>();
+            }
+            catch
+            {
+                _activities = new List<ActivityRow>();
+            }
+        }
+        else
+        {
+            _activities = new List<ActivityRow>();
+        }
+    }
+
+    private async Task UpdateJson()
+    {
+        Json = JsonSerializer.Serialize(_activities);
+        await JsonChanged.InvokeAsync(Json);
+    }
+
+    private async Task AddRow()
+    {
+        _activities.Add(new ActivityRow());
+        await UpdateJson();
+    }
+
+    private async Task RemoveRow(ActivityRow row)
+    {
+        if (_activities.Remove(row))
+            await UpdateJson();
+    }
+
+    private class ActivityRow
+    {
+        public string VisitName { get; set; }
+        public int Day { get; set; }
+        public string Activity { get; set; }
+    }
+}

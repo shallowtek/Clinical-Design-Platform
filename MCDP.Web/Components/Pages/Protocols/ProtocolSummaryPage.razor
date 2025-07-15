@@ -1,0 +1,107 @@
+﻿@page "/protocols/{id:int}/summary"
+@using System.ComponentModel.DataAnnotations
+@using MCDP.Web.Models.M11
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+@inject ClinicalDbContext Db
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="min-h-screen bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold mb-6">Protocol Summary</h2>
+
+        <EditForm Model="@summary" OnValidSubmit="@HandleValidSubmit" class="space-y-6">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600 mb-4" />
+
+            <!-- 1.1 Protocol Synopsis -->
+            <div>
+                <label class="block font-medium mb-1">
+                    Protocol Synopsis <span class="text-red-500">*</span>
+                </label>
+                <InputTextArea @bind-Value="summary.Synopsis"
+                               rows="4"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <ValidationMessage For="@(() => summary.Synopsis)" class="text-red-500 text-sm mt-1" />
+            </div>
+
+            <!-- 1.1.1 Objectives & Estimands -->
+            <div>
+                <label class="block font-medium mb-1">
+                    Primary & Secondary Objectives / Estimands <span class="text-red-500">*</span>
+                </label>
+                <InputTextArea @bind-Value="summary.ObjectivesAndEstimands"
+                               rows="4"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <ValidationMessage For="@(() => summary.ObjectivesAndEstimands)" class="text-red-500 text-sm mt-1" />
+            </div>
+
+            <!-- 1.1.2 Overall Design -->
+            <div>
+                <label class="block font-medium mb-1">Overall Design</label>
+                <InputTextArea @bind-Value="summary.OverallDesign"
+                               rows="3"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <!-- 1.2 Trial Schema -->
+            <div>
+                <label class="block font-medium mb-1">
+                    Trial Schema (diagram or summary)
+                </label>
+                <InputText @bind-Value="summary.TrialSchema"
+                           class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <small class="text-gray-500">e.g. "Two-arm parallel, randomization 1:1"</small>
+            </div>
+
+            <!-- 1.3 Schedule of Activities -->
+            <div>
+                <label class="block font-medium mb-1">Schedule of Activities</label>
+                <ScheduleOfActivitiesGrid @bind-Json="summary.ScheduleJson" />
+                <small class="text-gray-500">
+                    Use “Add Activity” to create visits, days, and activities.
+                </small>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                    Save Summary
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private ProtocolSummary summary = new ProtocolSummary();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Load existing summary if present
+        var existing = await Db.ProtocolSummaries.FindAsync(id);
+        if (existing != null)
+        {
+            summary = existing;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (summary.Id == 0)
+        {
+            summary.TitlePageId = id;
+            Db.ProtocolSummaries.Add(summary);
+        }
+        else
+        {
+            Db.ProtocolSummaries.Update(summary);
+        }
+
+        await Db.SaveChangesAsync();
+        Nav.NavigateTo($"/protocols/{id}");
+    }
+}

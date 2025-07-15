@@ -1,0 +1,197 @@
+﻿@page "/protocols/{Id:guid}"
+@using MCDP.Web.Models.USDM
+@inject ClinicalDbContext Db
+@inject NavigationManager Nav
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+
+<h3>Edit Protocol</h3>
+
+@if (study == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm formname="EditForm" Model="@study" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+
+    <h4>1. Study Identification</h4>
+    <InputText @bind-Value="study.ProtocolIdentifier" class="form-control" placeholder="Protocol ID" />
+    <InputText @bind-Value="study.Title" class="form-control mt-2" placeholder="Study Title" />
+
+    <h4>2. Identifiers</h4>
+    @foreach (var id in study.Identifiers)
+    {
+        <div class="input-group">
+            <InputText @bind-Value="id.Type" class="form-control" placeholder="Type (e.g. Sponsor, EudraCT)" />
+            <InputText @bind-Value="id.Value" class="form-control" placeholder="Value" />
+            <button type="button" @onclick="() => RemoveIdentifier(id)">–</button>
+        </div>
+    }
+    <button type="button" class="btn btn-secondary mt-2" @onclick="AddIdentifier">Add Identifier</button>
+
+    <h4>3. Objectives</h4>
+    @foreach (var obj in study.Objectives)
+    {
+        <div class="input-group">
+            <select @bind="obj.Type" class="form-select">
+                <option value="Primary">Primary</option>
+                <option value="Secondary">Secondary</option>
+            </select>
+            <InputText @bind-Value="obj.Description" class="form-control" placeholder="Objective description" />
+            <button type="button" @onclick="() => RemoveObjective(obj)">–</button>
+        </div>
+    }
+    <button type="button" class="btn btn-secondary mt-2" @onclick="AddObjective">Add Objective</button>
+
+    <h4>4. Criteria</h4>
+<h4>4. Criteria</h4>
+
+<h5>Inclusion Criteria</h5>
+@foreach (var c in study.Criteria.Where(c => c.IsInclusion).ToList())
+{
+    <div class="input-group">
+        <InputText @bind-Value="c.Text" class="form-control" placeholder="Inclusion criterion" />
+        <button type="button" @onclick="() => RemoveCriterion(c)">–</button>
+    </div>
+}
+<button type="button" class="btn btn-secondary mt-2" @onclick="() => AddCriterion(true)">Add Inclusion Criterion</button>
+
+<h5>Exclusion Criteria</h5>
+@foreach (var c in study.Criteria.Where(c => !c.IsInclusion).ToList())
+{
+    <div class="input-group">
+        <InputText @bind-Value="c.Text" class="form-control" placeholder="Exclusion criterion" />
+        <button type="button" @onclick="() => RemoveCriterion(c)">–</button>
+    </div>
+}
+<button type="button" class="btn btn-secondary mt-2" @onclick="() => AddCriterion(false)">Add Exclusion Criterion</button>
+
+
+    <h4>5. Interventions</h4>
+    @foreach (var i in study.Interventions)
+    {
+        <div class="input-group">
+            <InputText @bind-Value="i.Name" class="form-control" placeholder="Name" />
+            <InputText @bind-Value="i.Description" class="form-control" placeholder="Description" />
+            <button type="button" @onclick="() => RemoveIntervention(i)">–</button>
+        </div>
+    }
+    <button type="button" class="btn btn-secondary mt-2" @onclick="AddIntervention">Add Intervention</button>
+
+    <h4>6. Activities</h4>
+    @foreach (var a in study.Activities)
+    {
+    <div class="input-group">
+        <InputText @bind-Value="a.Name" class="form-control" placeholder="Activity Name" />
+        <InputText @bind-Value="a.Description" class="form-control" placeholder="Description" />
+        <InputText @bind-Value="a.Category" class="form-control" placeholder="Category" />
+        <button type="button" @onclick="() => RemoveActivity(a)">–</button>
+    </div>
+    }
+    <button type="button" class="btn btn-secondary mt-2" @onclick="AddActivity">Add Activity</button>
+
+    <h4>7. Endpoints</h4>
+    @foreach (var e in study.Endpoints)
+    {
+    <div class="input-group">
+        <InputText @bind-Value="e.Name" class="form-control" placeholder="Name" />
+        <select @bind="e.Type" class="form-select">
+            <option value="Primary">Primary</option>
+            <option value="Secondary">Secondary</option>
+        </select>
+        <InputText @bind-Value="e.Description" class="form-control" placeholder="Description" />
+        <button type="button" @onclick="() => RemoveEndpoint(e)">–</button>
+    </div>
+    }
+    <button type="button" class="btn btn-secondary mt-2" @onclick="AddEndpoint">Add Endpoint</button>
+
+
+    <button type="submit" class="btn btn-primary mt-4">Save Protocol</button>
+
+    <button type="button" class="btn btn-outline-secondary mt-4" @onclick="ExportToPdf">
+        Download PDF (M11 Format)
+    </button>
+
+</EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private Study study;
+
+    protected override async Task OnInitializedAsync()
+    {
+        study = await Db.Studies
+            .Include(s => s.Objectives)
+            .Include(s => s.Criteria)
+            .Include(s => s.Identifiers)
+            .Include(s => s.Activities)
+            .Include(s => s.Endpoints)
+            .Include(s => s.Interventions)
+            .Include(s => s.Visits)
+            .FirstOrDefaultAsync(s => s.Id == Id);
+
+        if (study == null)
+        {
+            // Optional: redirect or show error
+            Nav.NavigateTo("/protocols");
+        }
+    }
+
+    private void AddIdentifier() => study.Identifiers.Add(new Identifier());
+    private void RemoveIdentifier(Identifier id) => study.Identifiers.Remove(id);
+
+    private void AddObjective() => study.Objectives.Add(new Objective());
+    private void RemoveObjective(Objective o) => study.Objectives.Remove(o);
+
+    private void AddIntervention() => study.Interventions.Add(new Intervention());
+    private void RemoveIntervention(Intervention i) => study.Interventions.Remove(i);
+
+    private void AddActivity() => study.Activities.Add(new Activity());
+    private void RemoveActivity(Activity a) => study.Activities.Remove(a);
+
+    private void AddEndpoint() => study.Endpoints.Add(new Endpoint());
+    private void RemoveEndpoint(Endpoint e) => study.Endpoints.Remove(e);
+
+
+    private void AddCriterion(bool isInclusion)
+    {
+        study.Criteria.Add(new Criterion { IsInclusion = isInclusion });
+    }
+
+    private void RemoveCriterion(Criterion c)
+    {
+        study.Criteria.Remove(c);
+    }
+
+    private async Task Save()
+    {
+        Db.Studies.Update(study);
+        await Db.SaveChangesAsync();
+        Nav.NavigateTo("/protocols");
+    }
+
+    private async Task ExportToPdf()
+    {
+        var study = await Db.Studies
+            .Include(s => s.Identifiers)
+            .Include(s => s.Objectives)
+            .Include(s => s.Criteria)
+            .Include(s => s.Interventions)
+            .Include(s => s.Activities)
+            .Include(s => s.Endpoints)
+            .FirstAsync(s => s.Id == Id);
+
+        var pdf = M11PdfExporter.Generate(study);
+        var fileName = $"{study.ProtocolIdentifier}.pdf";
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdf));
+    }
+
+}

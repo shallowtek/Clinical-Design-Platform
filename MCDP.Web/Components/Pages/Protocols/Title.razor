@@ -1,0 +1,173 @@
+﻿@page "/protocols/title"
+@page "/protocols/title/{id:int}"
+@using System.ComponentModel.DataAnnotations
+@using MCDP.Web.Models.M11
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+@inject ClinicalDbContext Db
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="min-h-screen bg-gray-100 py-10">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        <EditForm Model="titlePage" OnValidSubmit="HandleValidSubmit" class="space-y-6">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600" />
+
+            <!-- Navigation Tabs -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 border-b pb-2">
+                    @if (IsNew)
+                    {
+                        <span>New Protocol</span>
+                    }
+                    else
+                    {
+                        <span>Edit Protocol: @titlePage.ProtocolIdentifier</span>
+                    }
+                </h2>
+                <div class="flex space-x-2">
+                    <button type="button"
+                            @onclick='() => Nav.NavigateTo("/protocols")'
+                            class="text-indigo-600 hover:text-indigo-900 px-3 py-1 rounded">
+                        &larr; Back
+                    </button>
+
+
+                    <NavLink href="/protocols/title"
+                             Match="NavLinkMatch.Prefix"
+                             class="px-3 py-1 rounded hover:bg-gray-100"
+                             ActiveClass="font-semibold text-indigo-600">
+                        Title
+                    </NavLink>
+
+
+                    @if (!IsNew)
+                    {
+                        <NavLink href="@($"/protocols/{id}/summary")" Match="NavLinkMatch.Prefix"
+                                 class="px-3 py-1 rounded hover:bg-gray-100"
+                                 ActiveClass="font-semibold text-indigo-600">
+                            Summary
+                        </NavLink>
+
+                    }
+                </div>
+                
+            </div>
+
+            <!-- Sponsor Confidentiality -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Sponsor Confidentiality Statement</label>
+                <InputTextArea @bind-Value="titlePage.SponsorConfidentiality" rows="3" placeholder="Enter confidentiality statement"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+            </div>
+
+            <!-- Main Form Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Full Title -->
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-medium mb-1">
+                        Full Title <span class="text-red-500">*</span>
+                    </label>
+                    <InputText @bind-Value="titlePage.FullTitle" placeholder="Study full title"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    <ValidationMessage For="@(() => titlePage.FullTitle)" class="text-red-500 text-sm mt-1" />
+                </div>
+                <!-- Trial Acronym -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Trial Acronym</label>
+                    <InputText @bind-Value="titlePage.TrialAcronym" placeholder="e.g., RX-YZ"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+                <!-- Sponsor Name -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Sponsor Name</label>
+                    <InputText @bind-Value="titlePage.SponsorName" placeholder="Sponsor name"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+                <!-- Sponsor Address -->
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 font-medium mb-1">Sponsor Address</label>
+                    <InputTextArea @bind-Value="titlePage.SponsorAddress" rows="2" placeholder="Sponsor address"
+                                   class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Protocol Identifier -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">
+                        Protocol Identifier <span class="text-red-500">*</span>
+                    </label>
+                    <InputText @bind-Value="titlePage.ProtocolIdentifier" placeholder="Protocol ID"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    <ValidationMessage For="@(() => titlePage.ProtocolIdentifier)" class="text-red-500 text-sm mt-1" />
+                </div>
+                <!-- Original Protocol -->
+                <div class="flex items-center">
+                    <InputCheckbox @bind-Value="titlePage.IsOriginalProtocol" class="h-5 w-5 text-indigo-600" />
+                    <label class="ml-2 text-gray-700 font-medium">Original Protocol?</label>
+                </div>
+                <!-- Version Number -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Version Number</label>
+                    <InputText @bind-Value="titlePage.VersionNumber" placeholder="e.g., 1.0"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+                <!-- Version Date -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-1">Version Date</label>
+                    <InputDate @bind-Value="titlePage.VersionDate"
+                               class="w-full border-gray-300 rounded-lg shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-8 flex justify-end">
+                <button type="submit"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                    @(IsNew ? "Create" : "Update")
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? id { get; set; }
+
+    private TitlePage titlePage = new TitlePage();
+
+    private bool IsNew => !id.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            var existing = await Db.TitlePages.FindAsync(id.Value);
+            if (existing == null)
+            {
+                Nav.NavigateTo("/protocols");
+                return;
+            }
+            titlePage = existing;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (IsNew)
+        {
+            Db.TitlePages.Add(titlePage);
+            await Db.SaveChangesAsync();
+            Nav.NavigateTo($"/protocols/{titlePage.Id}/summary");
+        }
+        else
+        {
+            Db.TitlePages.Update(titlePage);
+            await Db.SaveChangesAsync();
+            Nav.NavigateTo($"/protocols/{titlePage.Id}/summary");
+        }
+    }
+}

@@ -1,0 +1,78 @@
+﻿@page "/protocols/{id:int}"
+@using MCDP.Web.Models.M11
+@using Microsoft.EntityFrameworkCore
+@inject ClinicalDbContext Db
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+@code {
+    [Parameter] public int id { get; set; }
+    private TitlePage titlePage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        titlePage = await Db.TitlePages.FindAsync(id);
+        if (titlePage == null)
+        {
+            // Redirect back if not found
+            Nav.NavigateTo("/protocols");
+            return;
+        }
+        isLoading = false;
+    }
+}
+
+<div class="min-h-screen bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+        @if (isLoading)
+        {
+            <p class="text-gray-600 italic">Loading...</p>
+        }
+        else
+        {
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Protocol: @titlePage.ProtocolIdentifier</h2>
+                <div>
+                <button @onclick='() => Nav.NavigateTo("/protocols")' class="text-indigo-600 hover:text-indigo-900 mr-4">
+                    &larr; Back
+                </button>
+                <button @onclick='() => Nav.NavigateTo($"/protocols/title/{id}")'
+                    class="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold py-1 px-3 rounded-lg shadow">
+                    Edit
+                </button>
+                </div>
+            </div>
+            <section class="space-y-4">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700">Title Page Details</h3>
+                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-2">
+                        <dt class="font-medium text-gray-600">Full Title:</dt>
+                        <dd class="text-gray-800">@titlePage.FullTitle</dd>
+
+                        <dt class="font-medium text-gray-600">Trial Acronym:</dt>
+                        <dd class="text-gray-800">@titlePage.TrialAcronym</dd>
+
+                        <dt class="font-medium text-gray-600">Sponsor Name:</dt>
+                        <dd class="text-gray-800">@titlePage.SponsorName</dd>
+
+                        <dt class="font-medium text-gray-600">Sponsor Address:</dt>
+                        <dd class="text-gray-800">@titlePage.SponsorAddress</dd>
+
+                        <dt class="font-medium text-gray-600">Confidentiality Statement:</dt>
+                        <dd class="text-gray-800">@titlePage.SponsorConfidentiality</dd>
+
+                        <dt class="font-medium text-gray-600">Original Protocol:</dt>
+                        <dd class="text-gray-800">@(titlePage.IsOriginalProtocol ? "Yes" : "No")</dd>
+
+                        <dt class="font-medium text-gray-600">Version Number:</dt>
+                        <dd class="text-gray-800">@titlePage.VersionNumber</dd>
+
+                        <dt class="font-medium text-gray-600">Version Date:</dt>
+                        <dd class="text-gray-800">@titlePage.VersionDate?.ToString("dd MMM yyyy")</dd>
+                    </dl>
+                </div>
+            </section>
+        }
+    </div>
+</div>

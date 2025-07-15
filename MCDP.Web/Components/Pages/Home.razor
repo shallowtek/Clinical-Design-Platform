@@ -1,0 +1,28 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager Nav
+
+<div class="flex items-center justify-center min-h-screen bg-gray-100 p-6">
+    <div class="max-w-3xl w-full bg-white rounded-xl shadow-lg p-8 space-y-6">
+        <header class="text-center">
+            <h1 class="text-4xl font-extrabold text-gray-800">Clinical Trial Design Platform</h1>
+            <p class="mt-2 text-lg text-gray-600">Version 1.0</p>
+        </header>
+
+        <section class="space-y-4">
+            <p class="text-gray-700">Welcome to the <strong>Clinical Trial Design Platform</strong>, your centralized hub for designing and managing clinical trial protocols.</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li>Create and manage complete clinical trial protocols aligned with the <strong>ICH M11</strong> standard.</li>
+                <li>Store and structure protocol data using the <strong>USDM 4.0</strong> data model.</li>
+                <li>Export a finalized protocol document formatted to match the <strong>ICH M11 Structured Harmonised Protocol</strong> specification.</li>
+            </ul>
+        </section>
+
+        <div class="text-center">
+            <button @onclick='() => Nav.NavigateTo("/protocols")'
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition">
+                Go to Protocol Workspace
+            </button>
+        </div>
+    </div>
+</div>
